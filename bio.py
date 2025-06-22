@@ -7,6 +7,10 @@ Channel: https://t.me/itsSmartDev
 from pyrogram import Client, filters, errors
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
 from pyrogram.errors import UserNotParticipant
+import time
+import os
+import threading
+
 
 from helper.utils import (
     is_admin,
@@ -393,17 +397,5 @@ async def check_bio(client: Client, message):
 
 
 
-
-
-import os
-from flask import Flask
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Hello, World!"
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+# infinty polling
+bot.run()
