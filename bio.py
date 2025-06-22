@@ -6,6 +6,7 @@ Channel: https://t.me/itsSmartDev
 
 from pyrogram import Client, filters, errors
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
+from program.errors import UserNotParticipant
 
 from helper.utils import (
     is_admin,
@@ -28,11 +29,30 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
+from pyrogram.errors import UserNotParticipant
+
+CHANNEL_ID = -1002594448328  # 🔁 Replace this with your channel's ID (as integer)
+
 @app.on_message(filters.command("start"))
 async def start_handler(client: Client, message):
     chat_id = message.chat.id
+    user_id = message.from_user.id
     bot = await client.get_me()
     add_url = f"https://t.me/{bot.username}?startgroup=true"
+
+    # 🔐 Force Join Check
+    try:
+        member = await client.get_chat_member(CHANNEL_ID, user_id)
+    except UserNotParticipant:
+        channel_link = "https://t.me/your_channel_username"  # Replace with your channel link
+        await message.reply_text(
+            f"🔒 To use this bot, please join our channel first:\n\n"
+            f"👉 [Join Channel]({channel_link})",
+            disable_web_page_preview=True
+        )
+        return  # Stop the function here if not joined
+
+    # ✅ If user is in channel
     text = (
         "**✨ Welcome to BioLink Protector Bot! ✨**\n\n"
         "🛡️ I help protect your groups from users with links in their bio.\n\n"
@@ -43,6 +63,7 @@ async def start_handler(client: Client, message):
         "   • Whitelist management for trusted users\n\n"
         "**Use /help to see all available commands.**"
     )
+    await message.reply_text(text, disable_web_page_preview=True)
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add Me to Your Group", url=add_url)],
         [
