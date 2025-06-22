@@ -26,7 +26,7 @@ from config import (
     URL_PATTERN
 )
 
-bot = Client(
+app = Client(
     "biolink_protector_bot",
     api_id=API_ID,
     api_hash=API_HASH,
@@ -398,4 +398,4 @@ async def check_bio(client: Client, message):
 
 
 # infinty polling
-bot.run()
+app.run()
