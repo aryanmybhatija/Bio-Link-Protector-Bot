@@ -29,7 +29,7 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
-from pyrogram.errors import UserNotParticipant
+
 
 CHANNEL_ID = -1002594448328  # 🔁 Replace this with your channel's ID (as integer)
 
