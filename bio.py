@@ -6,7 +6,7 @@ Channel: https://t.me/itsSmartDev
 
 from pyrogram import Client, filters, errors
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
-from program.errors import UserNotParticipant
+from pyrogram.errors import UserNotParticipant
 
 from helper.utils import (
     is_admin,
