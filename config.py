@@ -3,10 +3,7 @@
 
 import os
 import re
-from dotenv import load_dotenv
 
-# Load environment variables from a .env file (optional)
-load_dotenv()
 
 API_ID = os.getenv("API_ID")  # Your Telegram API ID
 API_HASH = os.getenv("API_HASH")  # Your Telegram API Hash
