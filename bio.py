@@ -44,7 +44,7 @@ async def start_handler(client: Client, message):
     try:
         member = await client.get_chat_member(CHANNEL_ID, user_id)
     except UserNotParticipant:
-        channel_link = ""  # Replace with your real channel link
+        channel_link = "https://t.me/+iq2xj4LwYc9hNmE9"  # Replace with your real channel link
         await message.reply_text(
             f"🔒 To use this bot, please join our channel first:\n\n"
             f"👉 [Join Channel]({channel_link})",
