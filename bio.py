@@ -44,13 +44,13 @@ async def start_handler(client: Client, message):
     try:
         member = await client.get_chat_member(CHANNEL_ID, user_id)
     except UserNotParticipant:
-        channel_link = "https://t.me/your_channel_username"  # Replace with your channel link
+        channel_link = ""  # Replace with your real channel link
         await message.reply_text(
             f"🔒 To use this bot, please join our channel first:\n\n"
             f"👉 [Join Channel]({channel_link})",
             disable_web_page_preview=True
         )
-        return  # Stop the function here if not joined
+        return
 
     # ✅ If user is in channel
     text = (
@@ -63,7 +63,6 @@ async def start_handler(client: Client, message):
         "   • Whitelist management for trusted users\n\n"
         "**Use /help to see all available commands.**"
     )
-    await message.reply_text(text, disable_web_page_preview=True)
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add Me to Your Group", url=add_url)],
         [
@@ -71,8 +70,9 @@ async def start_handler(client: Client, message):
             InlineKeyboardButton("🗑️ Close", callback_data="close")
         ]
     ])
-    await client.send_message(chat_id, text, reply_markup=kb)
-    
+    await message.reply_text(text, disable_web_page_preview=True, reply_markup=kb)
+
+
 @app.on_message(filters.command("help"))
 async def help_handler(client: Client, message):
     chat_id = message.chat.id
@@ -91,8 +91,16 @@ async def help_handler(client: Client, message):
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🗑️ Close", callback_data="close")]
     ])
-    await client.send_message(chat_id, help_text, reply_markup=kb)
+    await message.reply_text(help_text, reply_markup=kb)
 
+
+@app.on_callback_query(filters.regex("close"))
+async def close_callback(client: Client, callback_query):
+    try:
+        await callback_query.message.delete()
+    except Exception as e:
+        await callback_query.answer("Couldn't delete message.", show_alert=True)
+        
 @app.on_message(filters.group & filters.command("config"))
 async def configure(client: Client, message):
     chat_id = message.chat.id
