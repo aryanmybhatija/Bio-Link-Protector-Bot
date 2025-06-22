@@ -26,7 +26,7 @@ from config import (
     URL_PATTERN
 )
 
-app = Client(
+bot = Client(
     "biolink_protector_bot",
     api_id=API_ID,
     api_hash=API_HASH,
