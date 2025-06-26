@@ -4,8 +4,9 @@ User: https://t.me/BisnuRay
 Channel: https://t.me/itsSmartDev
 """
 
+from pyrogram.enums import ChatPermissions
 from pyrogram import Client, filters, errors
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import UserNotParticipant
 import time
 import os
@@ -116,6 +117,96 @@ async def recheck_join(client: Client, callback_query):
         await callback_query.message.delete()
         await start_handler(client, callback_query.message)
 
+# 🔇 Mute Command
+@app.on_message(filters.command("mute") & filters.group)
+async def mute_user(client, message):
+    user_id = None
+    if message.reply_to_message:
+        user_id = message.reply_to_message.from_user.id
+    elif len(message.command) > 1:
+        try:
+            user_id = int(message.command[1])
+        except:
+            return await message.reply("❗ Invalid user ID.")
+
+    if not user_id:
+        return await message.reply("❗ Use: /mute or reply to a user.")
+
+    try:
+        await client.restrict_chat_member(
+            message.chat.id,
+            user_id,
+            permissions=ChatPermissions()  # No permissions = mute
+        )
+        await message.reply(f"🔇 User `{user_id}` muted.")
+    except Exception as e:
+        await message.reply(f"❌ Mute failed: {e}")
+
+# 🔊 Unmute Command
+@app.on_message(filters.command("unmute") & filters.group)
+async def unmute_user(client, message):
+    user_id = None
+    if message.reply_to_message:
+        user_id = message.reply_to_message.from_user.id
+    elif len(message.command) > 1:
+        try:
+            user_id = int(message.command[1])
+        except:
+            return await message.reply("❗ Invalid user ID.")
+
+    if not user_id:
+        return await message.reply("❗ Use: /unmute or reply to a user.")
+
+    try:
+        await client.restrict_chat_member(
+            message.chat.id,
+            user_id,
+            permissions=ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_invite_users=True,
+            )
+        )
+        await message.reply(f"🔊 User `{user_id}` unmuted.")
+    except Exception as e:
+        await message.reply(f"❌ Unmute failed: {e}")
+
+# 🔨 Ban Command
+@app.on_message(filters.command("ban") & filters.group)
+async def ban_user(client, message):
+    user_id = None
+    if message.reply_to_message:
+        user_id = message.reply_to_message.from_user.id
+    elif len(message.command) > 1:
+        try:
+            user_id = int(message.command[1])
+        except:
+            return await message.reply("❗ Invalid user ID.")
+
+    if not user_id:
+        return await message.reply("❗ Use: /ban or reply to a user.")
+
+    try:
+        await client.ban_chat_member(message.chat.id, user_id)
+        await message.reply(f"🚫 User `{user_id}` banned.")
+    except Exception as e:
+        await message.reply(f"❌ Ban failed: {e}")
+
+# 🔓 Unban Command
+@app.on_message(filters.command("unban") & filters.group)
+async def unban_user(client, message):
+    if len(message.command) < 2:
+        return await message.reply("❗ Use: /unban user_id")
+    try:
+        user_id = int(message.command[1])
+        await client.unban_chat_member(message.chat.id, user_id)
+        await message.reply(f"✅ User `{user_id}` unbanned.")
+    except Exception as e:
+        await message.reply(f"❌ Unban failed: {e}")
+
 @app.on_message(filters.command("help"))
 async def help_handler(client: Client, message):
     chat_id = message.chat.id
@@ -123,6 +214,10 @@ async def help_handler(client: Client, message):
         "**🛠️ Bot Commands & Usage**\n\n"
         "`/config` – set warn-limit & punishment mode\n"
         "`/free` – whitelist a user (reply or user/id)\n"
+        "`/mute` – mute a user (reply or user/id)\n"
+        "`/unmute` – unmute a user (reply or user/id)\n"
+        "`/ban` – ban a user (reply or user/id)\n"
+        "`/unban` – unban a user (reply or user/id)\n"
         "`/unfree` – remove from whitelist\n"
         "`/freelist` – list all whitelisted users\n\n"
         "**When someone with a URL in their bio posts, I’ll:**\n"
