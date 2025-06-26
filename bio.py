@@ -35,26 +35,59 @@ app = Client(
 
 
 
-CHANNEL_ID = -1002594448328  # 🔁 Replace this with your channel's ID (as integer)
+# Force join channels (use numeric chat IDs for get_chat_member)
+FORCE_JOIN_1 = -1002561868621  # Channel 1 ID
+FORCE_JOIN_2 = -1002134567890  # Channel 2 ID
 
-@app.on_message(filters.command("start"))
-async def start_handler(client: Client, message):
-    chat_id = message.chat.id
+# Corresponding invite links for channels
+INVITE_LINK_1 = "https://t.me/your_channel_1"
+INVITE_LINK_2 = "https://t.me/your_channel_2"
+
+# Check authorization (owner or sudo)
+def is_authorized(user_id: int) -> bool:
+    return user_id == OWNER_ID or user_id in SUDO_USERS
+
+# Bot setup
+bot = Client(
+    "bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
+
+# Force Join Middleware
+@bot.on_message(filters.private)
+async def check_force_join(client: Client, message: Message):
     user_id = message.from_user.id
-    bot = await client.get_me()
-    add_url = f"https://t.me/{bot.username}?startgroup=true"
 
-    # 🔐 Force Join Check
-    try:
-        member = await client.get_chat_member(CHANNEL_ID, user_id)
-    except UserNotParticipant:
-        channel_link = "https://t.me/+iq2xj4LwYc9hNmE9"  # Replace with your real channel link
-        await message.reply_text(
-            f"🔒 To use this bot, please join our channel first:\n\n"
-            f"👉 [Join Channel]({channel_link})",
+    not_joined_channels = []
+
+    # Check both channels
+    for channel_id, invite_link in [(FORCE_JOIN_1, INVITE_LINK_1), (FORCE_JOIN_2, INVITE_LINK_2)]:
+        try:
+            member = await client.get_chat_member(channel_id, user_id)
+            if member.status == "kicked":
+                await message.reply("🚫 You are banned from using this bot.")
+                return
+        except UserNotParticipant:
+            not_joined_channels.append(invite_link)
+
+    if not_joined_channels:
+        text = "🔒 To use this bot, please join both channels first:"
+        # Create buttons
+        buttons = [
+            [InlineKeyboardButton("📢 Join Channel 1", url=INVITE_LINK_1)],
+            [InlineKeyboardButton("📢 Join Channel 2", url=INVITE_LINK_2)]
+        ]
+        await message.reply(
+            text,
+            reply_markup=InlineKeyboardMarkup(buttons),
             disable_web_page_preview=True
         )
         return
+
+    # User passed both checks
+    await message.reply("✅ You are authorized. Send your command...")
 
     # ✅ If user is in channel
     text = (
