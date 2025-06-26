@@ -35,62 +35,48 @@ app = Client(
 
 
 
-# Force join channels (use numeric chat IDs for get_chat_member)
-FORCE_JOIN_1 = -1002561868621  # Channel 1 ID
-FORCE_JOIN_2 = -1002134567890  # Channel 2 ID
+# ============ 🔗 Force Join Channels (Edit Only Here) ============
+FORCE_CHANNELS = [
+    {"id": "-1001234567890", "link": "https://t.me/c/1234567890/1"},  # Channel 1
+    {"id": "-1009876543210", "link": "https://t.me/c/9876543210/1"},  # Channel 2
+]
+# =================================================================
 
-# Corresponding invite links for channels
-INVITE_LINK_1 = "https://t.me/your_channel_1"
-INVITE_LINK_2 = "https://t.me/your_channel_2"
-
-# Check authorization (owner or sudo)
-def is_authorized(user_id: int) -> bool:
-    return user_id == OWNER_ID or user_id in SUDO_USERS
-
-# Bot setup
-bot = Client(
-    "bot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN
-)
-
-# Force Join Middleware
-@bot.on_message(filters.private)
-async def check_force_join(client: Client, message: Message):
+@app.on_message(filters.command("start"))
+async def start_handler(client: Client, message):
     user_id = message.from_user.id
 
-    not_joined_channels = []
-
-    # Check both channels
-    for channel_id, invite_link in [(FORCE_JOIN_1, INVITE_LINK_1), (FORCE_JOIN_2, INVITE_LINK_2)]:
+    # 🔍 Check force join
+    not_joined = []
+    for ch in FORCE_CHANNELS:
         try:
-            member = await client.get_chat_member(channel_id, user_id)
-            if member.status == "kicked":
-                await message.reply("🚫 You are banned from using this bot.")
-                return
+            await client.get_chat_member(ch["id"], user_id)
         except UserNotParticipant:
-            not_joined_channels.append(invite_link)
+            not_joined.append(ch)
+        except Exception:
+            continue  # Optional: ignore if bot isn't admin in channel
 
-    if not_joined_channels:
-        text = "🔒 To use this bot, please join both channels first:"
-        # Create buttons
-        buttons = [
-            [InlineKeyboardButton("📢 Join Channel 1", url=INVITE_LINK_1)],
-            [InlineKeyboardButton("📢 Join Channel 2", url=INVITE_LINK_2)]
+    # ❌ If user hasn't joined all channels
+    if not_joined:
+        btns = [
+            [InlineKeyboardButton(f"📢 Join Channel {i+1}", url=ch["link"])]
+            for i, ch in enumerate(not_joined)
         ]
-        await message.reply(
-            text,
-            reply_markup=InlineKeyboardMarkup(buttons),
-            disable_web_page_preview=True
-        )
+        btns.append([
+            InlineKeyboardButton("✅ I've Joined", callback_data="check_join"),
+            InlineKeyboardButton("🗑️ Close", callback_data="close")
+        ])
+        msg = "**🔒 Access Denied!**\n\nPlease join the required channels to continue:\n"
+        for ch in not_joined:
+            msg += f"• #{ch['id']}\n"
+        await message.reply(msg, reply_markup=InlineKeyboardMarkup(btns))
         return
 
-    # User passed both checks
-    await message.reply("✅ You are authorized. Send your command...")
+    # ✅ All channels joined — show welcome
+    bot = await client.get_me()
+    add_url = f"https://t.me/{bot.username}?startgroup=true"
 
-    # ✅ If user is in channel
-    text = (
+    welcome_text = (
         "**✨ Welcome to BioLink Protector Bot! ✨**\n\n"
         "🛡️ I help protect your groups from users with links in their bio.\n\n"
         "**🔹 Key Features:**\n"
@@ -100,15 +86,35 @@ async def check_force_join(client: Client, message: Message):
         "   • Whitelist management for trusted users\n\n"
         "**Use /help to see all available commands.**"
     )
+
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add Me to Your Group", url=add_url)],
         [
-            InlineKeyboardButton("🛠️ Support", url="https://t.me/Contact_AdminSbot"),
+            InlineKeyboardButton("🛠️ Support", url="https://t.me/itsSmartDev"),
             InlineKeyboardButton("🗑️ Close", callback_data="close")
         ]
     ])
-    await message.reply_text(text, disable_web_page_preview=True, reply_markup=kb)
 
+    await message.reply(welcome_text, reply_markup=kb)
+
+
+@app.on_callback_query(filters.regex("check_join"))
+async def recheck_join(client: Client, callback_query):
+    user_id = callback_query.from_user.id
+    not_joined = []
+    for ch in FORCE_CHANNELS:
+        try:
+            await client.get_chat_member(ch["id"], user_id)
+        except UserNotParticipant:
+            not_joined.append(ch)
+        except Exception:
+            continue
+
+    if not_joined:
+        await callback_query.answer("❌ You're still missing some channels!", show_alert=True)
+    else:
+        await callback_query.message.delete()
+        await start_handler(client, callback_query.message)
 
 @app.on_message(filters.command("help"))
 async def help_handler(client: Client, message):
