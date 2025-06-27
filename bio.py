@@ -1,7 +1,7 @@
 """
-Author: Bisnu Ray
-User: https://t.me/BisnuRay
-Channel: https://t.me/itsSmartDev
+Author: Bisnu Ray & Sonu Tomar
+User: https://t.me/Sonuporsa & https://t.me/bisnuray
+Channel: https://t.me/Team_Sonu1
 """
 
 from pyrogram.enums import ChatPermissions
@@ -38,8 +38,8 @@ app = Client(
 
 # ============ 🔗 Force Join Channels (Edit Only Here) ============
 FORCE_CHANNELS = [
-    {"id": "-1001234567890", "link": "https://t.me/c/1234567890/1"},  # Channel 1
-    {"id": "-1009876543210", "link": "https://t.me/c/9876543210/1"},  # Channel 2
+    {"id": "-1002690416211", "link": "https://t.me/Team_Sonu1"},  # Channel 1
+    {"id": "-1002594448328", "link": "https://t.me/+2EFZ-jRYPg1mOTll"},  # Channel 2
 ]
 # =================================================================
 
@@ -91,7 +91,7 @@ async def start_handler(client: Client, message):
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add Me to Your Group", url=add_url)],
         [
-            InlineKeyboardButton("🛠️ Support", url="https://t.me/itsSmartDev"),
+            InlineKeyboardButton("🛠️ Support", url="https://t.me/Contact_AdminSbot"),
             InlineKeyboardButton("🗑️ Close", callback_data="close")
         ]
     ])
